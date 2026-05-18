@@ -6,6 +6,7 @@
 <title>สพด. Dashboard | ปีการศึกษา 2567</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -32,19 +33,6 @@ body{font-family:'Mitr',Tahoma,sans-serif;background:var(--bg);color:var(--text)
 
 /* LAYOUT */
 .wrap{max-width:1440px;margin:0 auto;padding:16px 18px}
-
-/* UPLOAD ZONE (shown on file://) */
-.upload-section{margin-bottom:14px}
-.upload-notice{background:#FFFBEB;border:1.5px solid #FCD34D;border-radius:var(--r);padding:13px 18px;margin-bottom:10px;font-size:12px;line-height:1.8;color:#92400E;display:none}
-.upload-notice strong{color:#78350F;font-size:13px}
-.upload-notice code{background:#FEF3C7;padding:1px 5px;border-radius:4px}
-.upload-zone{border:2px dashed #FCA5D0;border-radius:var(--r);padding:20px;text-align:center;cursor:pointer;background:linear-gradient(135deg,#FFF0F7,#F5F0FF);display:none;transition:background .15s}
-.upload-zone:hover,.upload-zone.drag{background:linear-gradient(135deg,#FFE4ED,#EAE4FF);border-color:var(--pink-d)}
-.upload-zone input{display:none}
-.upload-zone .uz-i{font-size:30px;margin-bottom:6px}
-.upload-zone .uz-t{font-size:14px;font-weight:500;color:var(--pink-d)}
-.upload-zone .uz-s{font-size:12px;color:var(--muted);margin-top:4px}
-.upload-success{display:none;background:var(--mint-l);border:1.5px solid var(--mint);border-radius:var(--rs);padding:10px 16px;font-size:13px;color:var(--mint-d);margin-bottom:10px}
 
 /* TOP BAR */
 .top-bar{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:12px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px;box-shadow:var(--shadow)}
@@ -129,9 +117,6 @@ tbody tr:hover td{background:#FFF5FB}
   .total-chip{margin-left:0;width:100%;justify-content:space-between}
   .hdr h1{font-size:13px}
 }
-@media(max-width:480px){
-  .fg select,.fg input{font-size:12px;max-width:130px}
-}
 </style>
 </head>
 <body>
@@ -148,23 +133,7 @@ tbody tr:hover td{background:#FFF5FB}
 
 <div class="wrap">
 
-  <!-- UPLOAD SECTION (visible only on file://) -->
-  <div class="upload-section">
-    <div class="upload-notice" id="uploadNotice">
-      <strong>💡 โหมดทดสอบบนเครื่อง</strong> — เบราว์เซอร์บล็อกการดึงข้อมูลจากไฟล์ในเครื่อง
-      เมื่อ deploy ขึ้น <strong>GitHub Pages</strong> จะดึง Google Sheets อัตโนมัติ ไม่ต้อง upload<br>
-      สำหรับทดสอบในเครื่อง: ไปที่ Google Sheets → <strong>File → Download → <code>Comma Separated Values (.csv)</code></strong> แล้วอัปโหลดด้านล่าง
-    </div>
-    <label class="upload-zone" id="dropZone">
-      <input type="file" id="csvFile" accept=".csv,.txt">
-      <div class="uz-i">📂</div>
-      <div class="uz-t">คลิกเพื่อเลือกไฟล์ CSV</div>
-      <div class="uz-s" id="fileLabel">หรือลากไฟล์มาวางที่นี่</div>
-    </label>
-    <div class="upload-success" id="uploadSuccess"></div>
-  </div>
-
-  <!-- TOP BAR (filters + total chip) -->
+  <!-- TOP BAR -->
   <div class="top-bar" id="topBar" style="display:none">
     <div class="fg">
       <label>เขตสุขภาพ</label>
@@ -256,14 +225,14 @@ tbody tr:hover td{background:#FFF5FB}
         </tr></thead>
         <tbody id="tbody">
           <tr><td colspan="7" class="msg">
-            <div class="spin"></div><br>⏳ กำลังเชื่อมต่อ Google Sheets...
+            <div class="spin"></div><br>⏳ กำลังโหลดข้อมูล...
           </td></tr>
         </tbody>
       </table>
     </div>
   </div>
 
-</div><!-- /wrap -->
+</div>
 
 <!-- FOOTER -->
 <footer class="foot">
@@ -276,55 +245,20 @@ tbody tr:hover td{background:#FFF5FB}
     </div>
     <div class="fc">
       <strong>🏢 หน่วยงาน</strong>
-     สำนักพัฒนาเด็กปฐมวัย (สพด.)<br>กระทรวงสาธารณสุข
+      สำนักพัฒนาเด็กปฐมวัย (สพด.)<br>กระทรวงสาธารณสุข
     </div>
     <div class="fc">
       <strong>🔄 สถานะข้อมูล</strong>
-      ดึงข้อมูลสดทุกครั้งที่เปิดหน้า<br>
+      ดึงข้อมูลสดจาก data.json<br>
       <span id="loadTime" style="font-size:11px">—</span>
     </div>
   </div>
   <div class="fb">
-    © 2567 สำนักทันตสาธารณสุข · ระบบติดตามผลการประเมินสถานพัฒนาเด็กปฐมวัย
+    © 2567 สำนักพัฒนาเด็กปฐมวัย · ระบบติดตามผลการประเมินสถานพัฒนาเด็กปฐมวัย
   </div>
 </footer>
 
 <script>
-/* ── CONFIG ── */
-const SHEET_ID = "1mGVj2fHIgwtOzbJTKP0_T-ABmSlmayQ1rb48rY4SSFI";
-const GID      = "469626894";
-const DIRECT   = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${GID}`;
-const PROXY1   = `https://api.allorigins.win/raw?url=${encodeURIComponent(DIRECT)}`;
-const PROXY2   = `https://cors.bridged.cc/${DIRECT}`;
-
-const isLocal  = location.protocol === 'file:';
-
-/* ── CSV PARSER ── */
-function parseCSV(text) {
-  const lines = text.split(/\r?\n/);
-  if (!lines.length) return [];
-  const hdrs = splitL(lines[0]);
-  const rows = [];
-  for (let i = 1; i < lines.length; i++) {
-    if (!lines[i].trim()) continue;
-    const v = splitL(lines[i]), row = {};
-    hdrs.forEach((h,j) => {
-      row[h.trim().toLowerCase().replace(/\./g,'').replace(/-/g,'')] = (v[j]||'').trim();
-    });
-    rows.push(row);
-  }
-  return rows;
-}
-function splitL(line) {
-  const r=[]; let c='', q=false;
-  for (let i=0;i<line.length;i++) {
-    if (line[i]==='"'){q=!q;continue;}
-    if (line[i]===',' && !q){r.push(c);c='';continue;}
-    c+=line[i];
-  }
-  r.push(c); return r;
-}
-
 /* ── STATE ── */
 let allData=[], activeStatus='';
 
@@ -343,10 +277,12 @@ function getFiltered() {
     return true;
   });
 }
+
 function zSort(a,b){
   const na=parseInt(a),nb=parseInt(b);
   return (!isNaN(na)&&!isNaN(nb)) ? na-nb : a.localeCompare(b,'th');
 }
+
 function fillSelect(id,key,sortFn){
   const el=document.getElementById(id);
   el.innerHTML='<option value="">ทั้งหมด</option>';
@@ -354,6 +290,7 @@ function fillSelect(id,key,sortFn){
     .sort(sortFn||(a,b)=>a.localeCompare(b,'th'))
     .forEach(v=>{const o=document.createElement('option');o.value=o.textContent=v;el.appendChild(o);});
 }
+
 function populateFilters(){
   fillSelect('zoneFilter','healthzone',zSort);
   fillSelect('provFilter','province');
@@ -407,7 +344,6 @@ function drawBar(data){
   const maxV=Math.max(...provs.map(p=>pm[p].pass+pm[p].fail),1);
   const bw=Math.max(8,colW*.62);
   const gap=cW/Math.max(provs.length,1);
-
   ctx.strokeStyle='#F5E8F5';ctx.lineWidth=1;
   for(let i=0;i<=4;i++){
     const y=pad.t+cH-(i/4)*cH;
@@ -470,7 +406,6 @@ function refresh(){
   drawDonut(f);drawBar(f);updateKPI(f);updateTable(f);
 }
 
-/* ── SHOW DASHBOARD ── */
 function showDashboard(){
   document.getElementById('topBar').style.display='flex';
   document.getElementById('cgrid').style.display='grid';
@@ -479,67 +414,51 @@ function showDashboard(){
   refresh();
 }
 
-/* ── FETCH (online mode) ── */
-async function tryFetch(url){
-  const r=await fetch(url,{cache:'no-store'});
-  if(!r.ok)throw new Error('HTTP '+r.status);
-  return r.text();
-}
-async function loadOnline(){
-  for(const url of [DIRECT,PROXY1,PROXY2]){
-    try{return await tryFetch(url);}catch(e){}
-  }
-  throw new Error('ไม่สามารถเชื่อมต่อได้');
-}
-
-/* ── INIT ── */
+/* ── INIT: FETCH data ── */
 (async()=>{
-  if(isLocal){
-    /* FILE MODE: show upload UI */
-    document.getElementById('uploadNotice').style.display='block';
-    document.getElementById('dropZone').style.display='block';
-    document.getElementById('tbody').innerHTML=
-      '<tr><td colspan="7" class="msg">📂 กรุณาอัปโหลดไฟล์ CSV ด้านบนเพื่อดูข้อมูล</td></tr>';
-    document.getElementById('tableCount').textContent='รอข้อมูล';
-  } else {
-    /* ONLINE MODE: fetch Google Sheets directly */
-    try{
-      const text=await loadOnline();
-      allData=parseCSV(text);
-      if(!allData.length)throw new Error('ไม่พบข้อมูลในไฟล์');
-      showDashboard();
-    }catch(e){
-      document.getElementById('tbody').innerHTML=
-        `<tr><td colspan="7" class="msg" style="color:#c0392b">
-          ❌ โหลดข้อมูลไม่สำเร็จ: ${e.message}<br>
-          <small>กรุณาตรวจสอบว่า Google Sheets ตั้งค่าการแชร์เป็น <strong>"Anyone with the link can view"</strong></small>
-        </td></tr>`;
-      document.getElementById('tableCount').textContent='โหลดไม่สำเร็จ';
+  try{
+    let data;
+    
+    // ลองดึง data.json ก่อน
+    try {
+      const res = await fetch('data.json');
+      if(res.ok) {
+        data = await res.json();
+      }
+    } catch(e1) {
+      // ถ้า data.json ไม่ได้ ลอง data.json.gz
+      try {
+        const res = await fetch('data.json.gz');
+        if(!res.ok) throw new Error(`HTTP ${res.status}`);
+        
+        const buffer = await res.arrayBuffer();
+        const uint8 = new Uint8Array(buffer);
+        
+        if(typeof pako === 'undefined') throw new Error('pako library not loaded');
+        
+        const decompressed = pako.ungzip(uint8, {to:'string'});
+        data = JSON.parse(decompressed);
+      } catch(e2) {
+        throw new Error(`ไม่พบ data.json หรือ data.json.gz: ${e1.message}`);
+      }
     }
+    
+    allData = data;
+    if(!allData.length) throw new Error('ไม่พบข้อมูลในไฟล์');
+    showDashboard();
+  }catch(e){
+    document.getElementById('tbody').innerHTML=
+      `<tr><td colspan="7" class="msg" style="color:#c0392b">
+        ❌ โหลดข้อมูลไม่สำเร็จ<br>
+        <small>${e.message}</small><br>
+        <small style="display:block;margin-top:10px">📌 วิธีแก้:<br>
+        ✓ อัปโหลด <strong>data.json</strong> (19 MB) หรือ<br>
+        ✓ อัปโหลด <strong>data.json.gz</strong> (1.3 MB) + <strong>index.html</strong>
+        </small>
+      </td></tr>`;
+    document.getElementById('tableCount').textContent='โหลดไม่สำเร็จ';
   }
 })();
-
-/* ── CSV UPLOAD HANDLER ── */
-function handleCSV(file){
-  if(!file)return;
-  const reader=new FileReader();
-  reader.onload=ev=>{
-    allData=parseCSV(ev.target.result);
-    if(!allData.length){alert('ไม่พบข้อมูล กรุณาตรวจสอบไฟล์ CSV');return;}
-    document.getElementById('fileLabel').textContent=`✅ ${file.name}`;
-    document.getElementById('dropZone').style.borderColor='#6DD8A8';
-    const s=document.getElementById('uploadSuccess');
-    s.style.display='block';
-    s.textContent=`✅ โหลดสำเร็จ: ${file.name} (${allData.length.toLocaleString()} รายการ)`;
-    showDashboard();
-  };
-  reader.readAsText(file,'UTF-8');
-}
-document.getElementById('csvFile').addEventListener('change',e=>handleCSV(e.target.files[0]));
-const dz=document.getElementById('dropZone');
-dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag')});
-dz.addEventListener('dragleave',()=>dz.classList.remove('drag'));
-dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag');handleCSV(e.dataTransfer.files[0])});
 
 /* ── FILTER EVENTS ── */
 ['zoneFilter','provFilter','ministryFilter'].forEach(id=>
