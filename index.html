@@ -295,7 +295,7 @@ const SHEET_ID = "1mGVj2fHIgwtOzbJTKP0_T-ABmSlmayQ1rb48rY4SSFI";
 const GID      = "469626894";
 const DIRECT   = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${GID}`;
 const PROXY1   = `https://api.allorigins.win/raw?url=${encodeURIComponent(DIRECT)}`;
-const PROXY2   = `https://corsproxy.io/?url=${encodeURIComponent(DIRECT)}`;
+const PROXY2   = `https://cors.bridged.cc/${DIRECT}`;
 
 const isLocal  = location.protocol === 'file:';
 
