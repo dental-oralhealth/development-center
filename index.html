@@ -6,7 +6,7 @@
 <title>สพด. Dashboard | ปีการศึกษา 2567</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@300;400;500;600&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
+<script src="pako-inline.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -417,7 +417,7 @@ function showDashboard(){
 /* ── INIT: FETCH data ── */
 (async()=>{
   const startTime = performance.now();
-  const TIMEOUT = 30000; // 30 วินาที
+  const TIMEOUT = 60000; // 60 วินาที (decompress อาจช้า)
   
   // Update message
   const setLoading = (msg) => {
@@ -427,7 +427,7 @@ function showDashboard(){
   
   // Timeout promise
   const timeoutPromise = new Promise((_, reject) => 
-    setTimeout(() => reject(new Error('Timeout: โหลดข้อมูลไม่เสร็จใน 30 วินาที')), TIMEOUT)
+    setTimeout(() => reject(new Error('Timeout: โหลดข้อมูลไม่เสร็จใน 60 วินาที')), TIMEOUT)
   );
   
   try{
@@ -465,13 +465,25 @@ function showDashboard(){
         
         // ตรวจสอบ pako
         if(typeof pako === 'undefined') {
-          throw new Error('ไม่สามารถโหลด pako library - ตรวจสอบการเชื่อมต่อ CDN');
+          throw new Error('ไม่สามารถโหลด pako library');
         }
         
         console.log('[Load] pako ready, decompressing', (uint8.length/1024/1024).toFixed(2), 'MB...');
-        setLoading('⏳ กำลังแตกไฟล์ที่บีบอัด...');
+        setLoading('⏳ กำลังแตกไฟล์ที่บีบอัด (อาจใช้เวลา 10-20 วินาที)...');
         const startDecompress = performance.now();
-        const decompressed = pako.ungzip(uint8, {to:'string'});
+        
+        // Decompress อาจ async
+        let decompressed;
+        if (pako.ungzip.constructor.name === 'AsyncFunction') {
+          decompressed = await pako.ungzip(uint8, {to:'string'});
+        } else {
+          decompressed = pako.ungzip(uint8, {to:'string'});
+          // ถ้า return Promise
+          if (decompressed instanceof Promise) {
+            decompressed = await decompressed;
+          }
+        }
+        
         const decompressTime = (performance.now() - startDecompress).toFixed(0);
         console.log('[Load] Decompressed in', decompressTime, 'ms');
         
@@ -501,7 +513,8 @@ function showDashboard(){
         ✓ Refresh หน้า (Ctrl+F5)<br>
         ✓ ตรวจสอบว่า <strong>data.json.gz</strong> อยู่ใน repo root<br>
         ✓ เปิด Browser console (F12) เพื่อดู error รายละเอียด<br>
-        ✓ ลองใช้ Chrome หรือ Firefox แทน
+        ✓ ลองใช้ Chrome หรือ Firefox แทน Edge<br>
+        ✓ ดูว่า pako-inline.js โหลดได้ไหม
         </small>
       </td></tr>`;
     document.getElementById('tableCount').textContent='โหลดไม่สำเร็จ';
