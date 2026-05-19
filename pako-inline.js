@@ -1,50 +1,51 @@
-// pako-inline.js - Minimal GZIP decompression
-// ใช้ built-in browser Compression API แทน pako
+// pako-inline.js - GZIP decompression using CompressionStream API
+// ไม่มี CDN dependency - ใช้ native browser API
 
 window.pako = {
-  ungzip: function(uint8Array, options) {
-    // ใช้ DecompressionStream API ที่ built-in ใน browser สมัยใหม่
-    if (typeof CompressionStream !== 'undefined') {
-      // Async version - ต้องรอให้ complete
-      return new Promise((resolve, reject) => {
-        try {
-          const ds = new DecompressionStream('gzip');
-          const writer = ds.writable.getWriter();
-          const reader = ds.readable.getReader();
-          
-          writer.write(uint8Array).then(() => writer.close()).catch(reject);
-          
-          const chunks = [];
-          const read = () => {
-            reader.read().then(({ done, value }) => {
-              if (done) {
-                const result = new Uint8Array(chunks.reduce((a, b) => a + b.length, 0));
-                let pos = 0;
-                chunks.forEach(chunk => {
-                  result.set(chunk, pos);
-                  pos += chunk.length;
-                });
-                
-                const str = new TextDecoder().decode(result);
-                if (options && options.to === 'string') {
-                  resolve(str);
-                } else {
-                  resolve(result);
-                }
-              } else {
-                chunks.push(value);
-                read();
-              }
-            }).catch(reject);
-          };
-          read();
-        } catch (e) {
-          reject(e);
-        }
-      });
-    } else {
-      // Fallback: simple base64 decode สำหรับ browser เก่า (ไม่ได้ compress แต่ fallback)
-      throw new Error('CompressionStream API not supported - please use a modern browser (Chrome, Edge, Firefox)');
+  ungzip: async function(uint8Array, options) {
+    try {
+      // ใช้ DecompressionStream API
+      if (typeof DecompressionStream === 'undefined') {
+        throw new Error('CompressionStream API not supported in this browser');
+      }
+      
+      const ds = new DecompressionStream('gzip');
+      const writer = ds.writable.getWriter();
+      const reader = ds.readable.getReader();
+      
+      // Write data
+      await writer.write(uint8Array);
+      await writer.close();
+      
+      // Read decompressed data
+      const chunks = [];
+      let done = false;
+      while (!done) {
+        const { value, done: isDone } = await reader.read();
+        done = isDone;
+        if (value) chunks.push(value);
+      }
+      
+      // Combine chunks
+      const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+      const result = new Uint8Array(totalLength);
+      let offset = 0;
+      for (const chunk of chunks) {
+        result.set(chunk, offset);
+        offset += chunk.length;
+      }
+      
+      // Convert to string if requested
+      if (options && options.to === 'string') {
+        return new TextDecoder().decode(result);
+      }
+      return result;
+    } catch (error) {
+      console.error('[pako] Error:', error.message);
+      throw new Error(`Decompression failed: ${error.message}`);
     }
   }
 };
+
+console.log('[pako-inline] ✅ Loaded - DecompressionStream ready');
+

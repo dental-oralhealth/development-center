@@ -286,8 +286,9 @@ function zSort(a,b){
 function fillSelect(id,key,sortFn){
   const el=document.getElementById(id);
   el.innerHTML='<option value="">ทั้งหมด</option>';
+  const compareFn = sortFn ? sortFn : (a,b)=>a.localeCompare(b,'th');
   [...new Set(allData.map(r=>r[key]).filter(Boolean))]
-    .sort(sortFn||(a,b)=>a.localeCompare(b,'th'))
+    .sort(compareFn)
     .forEach(v=>{const o=document.createElement('option');o.value=o.textContent=v;el.appendChild(o);});
 }
 
