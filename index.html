@@ -416,44 +416,92 @@ function showDashboard(){
 
 /* ── INIT: FETCH data ── */
 (async()=>{
+  const startTime = performance.now();
+  const TIMEOUT = 30000; // 30 วินาที
+  
+  // Update message
+  const setLoading = (msg) => {
+    const tbody = document.getElementById('tbody');
+    tbody.innerHTML = `<tr><td colspan="7" class="msg"><div class="spin"></div><br>${msg}</td></tr>`;
+  };
+  
+  // Timeout promise
+  const timeoutPromise = new Promise((_, reject) => 
+    setTimeout(() => reject(new Error('Timeout: โหลดข้อมูลไม่เสร็จใน 30 วินาที')), TIMEOUT)
+  );
+  
   try{
     let data;
     
     // ลองดึง data.json ก่อน
+    setLoading('⏳ กำลังโหลดข้อมูล (1/2)...');
     try {
-      const res = await fetch('data.json');
+      console.log('[Load] Trying data.json...');
+      const res = await Promise.race([
+        fetch('data.json?t=' + Date.now(), {cache: 'no-store'}),
+        timeoutPromise
+      ]);
       if(res.ok) {
+        console.log('[Load] Parsing JSON...');
         data = await res.json();
+        console.log('[Load] JSON parsed:', data.length, 'records');
       }
     } catch(e1) {
+      console.log('[Load] data.json failed:', e1.message);
+      
       // ถ้า data.json ไม่ได้ ลอง data.json.gz
+      setLoading('⏳ กำลังโหลดข้อมูล (2/2 - การบีบอัด)...');
       try {
-        const res = await fetch('data.json.gz');
+        console.log('[Load] Trying data.json.gz...');
+        const res = await Promise.race([
+          fetch('data.json.gz?t=' + Date.now(), {cache: 'no-store'}),
+          timeoutPromise
+        ]);
         if(!res.ok) throw new Error(`HTTP ${res.status}`);
         
+        console.log('[Load] Fetched .gz, decompressing...');
         const buffer = await res.arrayBuffer();
         const uint8 = new Uint8Array(buffer);
         
-        if(typeof pako === 'undefined') throw new Error('pako library not loaded');
+        // ตรวจสอบ pako
+        if(typeof pako === 'undefined') {
+          throw new Error('ไม่สามารถโหลด pako library - ตรวจสอบการเชื่อมต่อ CDN');
+        }
         
+        console.log('[Load] pako ready, decompressing', (uint8.length/1024/1024).toFixed(2), 'MB...');
+        setLoading('⏳ กำลังแตกไฟล์ที่บีบอัด...');
+        const startDecompress = performance.now();
         const decompressed = pako.ungzip(uint8, {to:'string'});
+        const decompressTime = (performance.now() - startDecompress).toFixed(0);
+        console.log('[Load] Decompressed in', decompressTime, 'ms');
+        
+        console.log('[Load] Parsing JSON from decompressed...');
         data = JSON.parse(decompressed);
+        console.log('[Load] JSON parsed:', data.length, 'records');
       } catch(e2) {
-        throw new Error(`ไม่พบ data.json หรือ data.json.gz: ${e1.message}`);
+        console.error('[Load] data.json.gz failed:', e2.message);
+        throw new Error(`ไม่พบ data.json หรือ data.json.gz: ${e2.message}`);
       }
     }
     
     allData = data;
     if(!allData.length) throw new Error('ไม่พบข้อมูลในไฟล์');
+    
+    const totalTime = (performance.now() - startTime).toFixed(0);
+    console.log('[Load] ✅ Complete in', totalTime, 'ms');
+    
     showDashboard();
   }catch(e){
+    console.error('[Load] Error:', e);
     document.getElementById('tbody').innerHTML=
       `<tr><td colspan="7" class="msg" style="color:#c0392b">
         ❌ โหลดข้อมูลไม่สำเร็จ<br>
-        <small>${e.message}</small><br>
-        <small style="display:block;margin-top:10px">📌 วิธีแก้:<br>
-        ✓ อัปโหลด <strong>data.json</strong> (19 MB) หรือ<br>
-        ✓ อัปโหลด <strong>data.json.gz</strong> (1.3 MB) + <strong>index.html</strong>
+        <small><strong>${e.message}</strong></small><br>
+        <small style="display:block;margin-top:10px">📌 ให้ลองสิ่งเหล่านี้:<br>
+        ✓ Refresh หน้า (Ctrl+F5)<br>
+        ✓ ตรวจสอบว่า <strong>data.json.gz</strong> อยู่ใน repo root<br>
+        ✓ เปิด Browser console (F12) เพื่อดู error รายละเอียด<br>
+        ✓ ลองใช้ Chrome หรือ Firefox แทน
         </small>
       </td></tr>`;
     document.getElementById('tableCount').textContent='โหลดไม่สำเร็จ';
