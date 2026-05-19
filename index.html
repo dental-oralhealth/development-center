@@ -40,9 +40,19 @@ body{font-family:'Mitr',Tahoma,sans-serif;background:var(--bg);color:var(--text)
 .total-chip .tc-n{font-size:21px;font-weight:600;color:var(--pink-d)}
 .total-chip .tc-l{font-size:10px;color:var(--muted);line-height:1.4}
 
-.cgrid{display:grid;grid-template-columns:220px 1fr 205px;gap:14px;margin-bottom:14px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:15px;box-shadow:var(--shadow);min-height:fit-content}
-.ch{font-size:10px;font-weight:500;color:var(--muted);letter-spacing:.05em;padding-bottom:8px;margin-bottom:10px;border-bottom:1.5px dashed var(--border)}
+.cgrid{display:grid;grid-template-columns:1fr 1.8fr 1fr;gap:16px;margin-bottom:16px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px;box-shadow:var(--shadow);display:flex;flex-direction:column}
+
+.ch{font-size:11px;font-weight:500;color:var(--muted);letter-spacing:.05em;padding-bottom:8px;margin-bottom:10px;border-bottom:1.5px dashed var(--border);flex-shrink:0}
+
+/* Donut container */
+#donutCanvas{max-width:100%;width:auto;height:auto}
+
+/* Bar container */
+#barCanvas{width:100%;height:auto;min-height:180px;display:block}
+
+/* KPI */
+.kpil{display:flex;flex-direction:column;gap:10px}
 
 .sbr{display:flex;gap:5px;margin-bottom:10px;flex-wrap:wrap}
 .sb{font-family:'Mitr',Tahoma,sans-serif;font-size:11px;padding:3px 11px;border:1.5px solid var(--border);border-radius:20px;background:transparent;color:var(--muted);cursor:pointer;transition:all .15s}
@@ -56,11 +66,11 @@ body{font-family:'Mitr',Tahoma,sans-serif;background:var(--bg);color:var(--text)
 .ld{width:10px;height:10px;border-radius:3px;flex-shrink:0}
 
 .kpil{display:flex;flex-direction:column;gap:8px}
-.kpi{border-radius:var(--rs);padding:10px 13px;border-left:4px solid transparent}
-.kpi.p{background:linear-gradient(135deg,var(--mint-l),#F5FFF9);border-left-color:var(--mint-d)}
-.kpi.f{background:linear-gradient(135deg,var(--orange-l),#FFF5E8);border-left-color:var(--orange-d)}
-.kpi-l{font-size:10px;color:var(--muted);margin-bottom:2px}
-.kpi-v{font-size:20px;font-weight:600}
+.kpi{border-radius:var(--rs);padding:9px 12px;border-left:4px solid transparent;background-size:100% 100%}
+.kpi.p{background:linear-gradient(135deg,var(--mint-l) 0%,#E8FFF5 100%);border-left-color:var(--mint-d)}
+.kpi.f{background:linear-gradient(135deg,var(--orange-l) 0%,#FFF5E8 100%);border-left-color:var(--orange-d)}
+.kpi-l{font-size:10px;color:var(--muted);margin-bottom:2px;white-space:nowrap}
+.kpi-v{font-size:20px;font-weight:700;line-height:1}
 .kpi.p .kpi-v{color:var(--mint-d)}.kpi.f .kpi-v{color:var(--orange-d)}
 .pbar-wrap{background:#F0D8E8;border-radius:8px;overflow:hidden;height:8px;margin-top:8px}
 .pbar-fill{height:100%;background:linear-gradient(90deg,var(--mint-d),#8AE8C0);border-radius:8px;transition:width .6s}
@@ -96,49 +106,61 @@ tbody tr:hover td{background:#FFF5FB}
   .cgrid .card:last-child{grid-column:span 2;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;align-items:start}
   .cgrid .card:last-child .ch{grid-column:span 3}
 }
+@media(max-width:1200px){
+  .cgrid{grid-template-columns:150px 1fr 140px;gap:14px}
+}
 @media(max-width:900px){
-  .cgrid{grid-template-columns:1fr}
-  .cgrid .card:last-child{grid-column:auto;display:block}
-  .cgrid .card:last-child .ch{grid-column:auto}
-  .top-bar{flex-direction:column;gap:12px}
-  .total-chip{width:100%;margin-left:0}
+  .cgrid{grid-template-columns:1fr;gap:12px}
+  .top-bar{flex-direction:column;gap:10px;padding:10px 12px}
   .bar-sep{display:none}
-  .fg{width:100%;min-width:auto}
+  .fg{width:100%}
+  .fg label{font-size:11px}
+  .fg select,.fg input{font-size:12px;width:100%;padding:6px 9px}
+  .total-chip{width:100%;margin-top:8px;margin-left:0;justify-content:space-between}
 }
 @media(max-width:700px){
-  .wrap{padding:12px}
-  .hdr{padding:10px 16px;gap:10px}
+  .wrap{padding:10px}
+  .hdr{padding:9px 14px}
   .hdr-txt h1{font-size:13px}
-  .hdr-badge{font-size:10px;padding:3px 10px}
-  .top-bar{padding:10px 12px}
-  .fg label{font-size:10px}
-  .fg select,.fg input[type=text]{font-size:12px;padding:5px 8px}
-  .total-chip{padding:6px 12px}
+  .hdr-badge{font-size:10px}
+  .top-bar{padding:9px 11px;gap:9px;flex-direction:column}
+  .fg{width:100%}
+  .fg input{width:100%}
+  .total-chip{padding:7px 12px}
   .total-chip .tc-n{font-size:18px}
-  .total-chip .tc-l{font-size:9px}
-  .card{padding:12px}
-  .ch{font-size:9px;padding-bottom:6px;margin-bottom:8px}
+  .card{padding:11px}
+  .ch{font-size:10px}
+  #donutCanvas{max-width:120px;height:auto}
   table{font-size:11px}
-  thead th{padding:7px 10px;font-size:9px}
-  tbody td{padding:6px 10px}
-  .tbar{padding:10px 12px 8px;flex-direction:column;align-items:flex-start;gap:6px}
+  thead th{padding:6px 9px;font-size:9px}
+  tbody td{padding:5px 9px}
 }
 @media(max-width:480px){
   .wrap{padding:8px}
-  .hdr{padding:8px 12px}
-  .hdr-logo{width:38px;height:38px;font-size:20px}
-  .hdr-txt h1{font-size:12px}
-  .hdr-txt p{font-size:10px}
-  .top-bar{padding:8px 10px}
-  .fg{flex-direction:column;gap:3px}
-  .fg input{width:100%;min-width:auto}
-  .total-chip{gap:8px;padding:5px 10px}
+  .hdr{padding:8px 12px;gap:8px}
+  .hdr-logo{width:36px;height:36px;font-size:18px}
+  .hdr-txt h1{font-size:11px}
+  .hdr-txt p{font-size:9px}
+  .hdr-badge{font-size:9px;padding:2px 8px}
+  .top-bar{padding:8px 10px;gap:8px}
+  .fg label{font-size:9px}
+  .fg select,.fg input{font-size:11px;padding:4px 7px}
+  .total-chip{padding:5px 10px;gap:6px}
   .total-chip .tc-n{font-size:16px}
   .total-chip .tc-l{font-size:8px}
-  .card{padding:10px}
+  .cgrid{gap:10px}
+  .card{padding:9px}
+  .ch{font-size:9px;margin-bottom:6px}
+  #donutCanvas{max-width:100px;height:auto}
+  .sbr{gap:3px}
+  .sb{font-size:9px;padding:2px 8px}
+  .kpi{padding:7px 10px}
+  .kpi-l{font-size:9px}
+  .kpi-v{font-size:17px}
   table{font-size:10px}
-  thead th{padding:5px 8px;font-size:8px}
-  tbody td{padding:5px 8px}
+  thead th{padding:4px 7px;font-size:8px}
+  tbody td{padding:4px 7px}
+  .tbar{padding:8px 10px 7px;font-size:11px}
 }
 </style>
 </head>
@@ -170,12 +192,16 @@ tbody tr:hover td{background:#FFF5FB}
     <div class="card">
       <div class="ch">🍩 ระดับคุณภาพ</div>
       <div class="sbr" id="statusBtns"><button class="sb a-all" data-val="">ทั้งหมด</button><button class="sb" data-val="ผ่าน">✅ ผ่าน</button><button class="sb" data-val="ไม่ผ่าน">❌ ไม่ผ่าน</button></div>
-      <canvas id="donutCanvas" width="190" height="160" style="display:block;margin:auto"></canvas>
+      <div style="display:flex;justify-content:center;align-items:center;min-height:160px">
+        <canvas id="donutCanvas"></canvas>
+      </div>
       <div class="leg" id="donutLeg"></div>
     </div>
     <div class="card">
       <div class="ch">📊 การกระจายตัวรายจังหวัด</div>
-      <div style="overflow-x:auto"><canvas id="barCanvas" height="190" style="display:block;min-width:100%"></canvas></div>
+      <div style="overflow-x:auto;flex:1">
+        <canvas id="barCanvas" style="display:block;max-width:100%"></canvas>
+      </div>
       <div class="leg" style="margin-top:6px"><span class="li"><span class="ld" style="background:#6DD8A8"></span>ผ่าน</span><span class="li"><span class="ld" style="background:#FFB997"></span>ไม่ผ่าน</span></div>
     </div>
     <div class="card">
@@ -239,30 +265,40 @@ function drawDonut(data){
   const cnt={};data.forEach(r=>{const k=r.passfailed||'ไม่ระบุ';cnt[k]=(cnt[k]||0)+1;});
   const lbl=Object.keys(cnt), vals=lbl.map(l=>cnt[l]);const tot=vals.reduce((a,b)=>a+b,0)||1;
   const CM={'ผ่าน':'#6DD8A8','ไม่ผ่าน':'#FFB997','ไม่ระบุ':'#D8C8E8'};
-  const cvs=document.getElementById('donutCanvas'),ctx=cvs.getContext('2d');
+  const cvs=document.getElementById('donutCanvas');
+  if(!cvs) return;
+  cvs.width=150; cvs.height=150;
+  const ctx=cvs.getContext('2d');
   const W=cvs.width,H=cvs.height;ctx.clearRect(0,0,W,H);
-  const cx=W/2,cy=H/2,ro=Math.min(W,H)*.43,ri=ro*.62;
+  const cx=W/2,cy=H/2,ro=W*0.35,ri=ro*0.62;
   let ang=-Math.PI/2;vals.forEach((v,i)=>{const sl=(v/tot)*Math.PI*2;ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,ro,ang,ang+sl);ctx.closePath();ctx.fillStyle=CM[lbl[i]]||'#E8C8D8';ctx.fill();ang+=sl;});
   ctx.beginPath();ctx.arc(cx,cy,ri,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();
-  ctx.textAlign='center';ctx.textBaseline='middle';ctx.font=`600 ${Math.round(H*.17)}px Mitr,Tahoma`;ctx.fillStyle='#3D2B47';ctx.fillText(tot.toLocaleString(),cx,cy-5);
-  ctx.font=`300 ${Math.round(H*.09)}px Mitr,Tahoma`;ctx.fillStyle='#9B7BAB';ctx.fillText('แห่ง',cx,cy+H*.11);
-  document.getElementById('donutLeg').innerHTML=lbl.map((l,i)=>`<span class="li"><span class="ld" style="background:${CM[l]||'#E8C8D8'}"></span>${l} ${Math.round(vals[i]/tot*100)}%</span>`).join('');
+  ctx.textAlign='center';ctx.textBaseline='middle';ctx.font=`700 20px Mitr,Tahoma`;ctx.fillStyle='#3D2B47';ctx.fillText(tot.toLocaleString(),cx,cy-3);
+  ctx.font=`12px Mitr,Tahoma`;ctx.fillStyle='#9B7BAB';ctx.fillText('แห่ง',cx,cy+10);
+  document.getElementById('donutLeg').innerHTML=lbl.map((l,i)=>`<span class="li" style="font-size:10px"><span class="ld" style="background:${CM[l]||'#E8C8D8'}"></span>${l} ${Math.round(vals[i]/tot*100)}%</span>`).join('');
 }
 
 function drawBar(data){
   const pm={};data.forEach(r=>{const p=r.province||'ไม่ระบุ';if(!pm[p])pm[p]={pass:0,fail:0};if(r.passfailed==='ผ่าน')pm[p].pass++;else pm[p].fail++;});
   const provs=Object.keys(pm).sort((a,b)=>a.localeCompare(b,'th'));
-  const colW=Math.max(24,Math.min(42,Math.floor(600/Math.max(provs.length,1))));
-  const cvs=document.getElementById('barCanvas');cvs.width=Math.max(600,provs.length*colW+50);cvs.height=190;
-  const W=cvs.width,H=190,ctx=cvs.getContext('2d');ctx.clearRect(0,0,W,H);
-  const pad={t:8,b:54,l:36,r:8};const cW=W-pad.l-pad.r,cH=H-pad.t-pad.b;
-  const maxV=Math.max(...provs.map(p=>pm[p].pass+pm[p].fail),1);const bw=Math.max(8,colW*.62);const gap=cW/Math.max(provs.length,1);
+  const cvs=document.getElementById('barCanvas');
+  if(!cvs) return;
+  const containerWidth = cvs.parentElement.offsetWidth - 20;
+  const colW = Math.max(20, Math.min(40, Math.floor(containerWidth / Math.max(provs.length, 1) * 0.7)));
+  cvs.width = Math.max(containerWidth - 20, provs.length * colW + 80);
+  cvs.height = 200;
+  
+  const W=cvs.width,H=cvs.height,ctx=cvs.getContext('2d');ctx.clearRect(0,0,W,H);
+  const pad={t:10,b:60,l:40,r:10};const cW=W-pad.l-pad.r,cH=H-pad.t-pad.b;
+  const maxV=Math.max(...provs.map(p=>pm[p].pass+pm[p].fail),1);const bw=Math.max(6,colW*.6);const gap=cW/Math.max(provs.length,1);
+  
   ctx.strokeStyle='#F5E8F5';ctx.lineWidth=1;
-  for(let i=0;i<=4;i++){const y=pad.t+cH-(i/4)*cH;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+cW,y);ctx.stroke();ctx.fillStyle='#C8A8C8';ctx.font='9px Mitr,Tahoma';ctx.textAlign='right';ctx.fillText(Math.round(maxV*i/4),pad.l-3,y+3);}
+  for(let i=0;i<=4;i++){const y=pad.t+cH-(i/4)*cH;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+cW,y);ctx.stroke();ctx.fillStyle='#999';ctx.font='9px Mitr,Tahoma';ctx.textAlign='right';ctx.fillText(Math.round(maxV*i/4),pad.l-4,y+3);}
+  
   provs.forEach((p,i)=>{const x=pad.l+i*gap+gap/2-bw/2;const pH=(pm[p].pass/maxV)*cH,fH=(pm[p].fail/maxV)*cH;
-    const gp=ctx.createLinearGradient(x,pad.t+cH-pH,x,pad.t+cH);gp.addColorStop(0,'#5CC898');gp.addColorStop(1,'#A0EDCA');ctx.fillStyle=gp;ctx.fillRect(x,pad.t+cH-pH,bw,pH);
-    const gf=ctx.createLinearGradient(x,pad.t+cH-pH-fH,x,pad.t+cH-pH);gf.addColorStop(0,'#E8A87A');gf.addColorStop(1,'#F5C9A8');ctx.fillStyle=gf;ctx.fillRect(x,pad.t+cH-pH-fH,bw,fH);
-    ctx.save();ctx.translate(x+bw/2,pad.t+cH+5);ctx.rotate(-Math.PI/4);ctx.fillStyle='#9B7BAB';ctx.font='9px Mitr,Tahoma';ctx.textAlign='right';ctx.fillText(p,0,0);ctx.restore();
+    ctx.fillStyle='#6DD8A8';ctx.fillRect(x,pad.t+cH-pH,bw,pH);
+    ctx.fillStyle='#FFB997';ctx.fillRect(x,pad.t+cH-pH-fH,bw,fH);
+    ctx.save();ctx.translate(x+bw/2,pad.t+cH+8);ctx.rotate(-Math.PI/4);ctx.fillStyle='#999';ctx.font='8px Mitr,Tahoma';ctx.textAlign='right';ctx.fillText(p,0,0);ctx.restore();
   });
 }
 
