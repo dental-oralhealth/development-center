@@ -21,12 +21,20 @@
 html{scroll-behavior:smooth}
 body{font-family:'Mitr',Tahoma,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-weight:300}
 
-.hdr{background:linear-gradient(135deg,#F9B8D0 0%,#C4AEED 55%,#A8D8EA 100%);padding:13px 22px;display:flex;align-items:center;gap:13px;box-shadow:0 3px 16px rgba(180,100,150,.2);position:sticky;top:0;z-index:100}
+.hdr{background:linear-gradient(135deg,#F9B8D0 0%,#C4AEED 55%,#A8D8EA 100%);padding:13px 22px;display:flex;align-items:center;gap:13px;box-shadow:0 3px 16px rgba(180,100,150,.2);position:sticky;top:0;z-index:100;flex-wrap:wrap;justify-content:space-between}
 .hdr-logo{width:43px;height:43px;background:rgba(255,255,255,.75);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.1)}
-.hdr-txt{flex:1;min-width:0}
+.hdr-txt{flex:1;min-width:0;min-width:200px}
 .hdr-txt h1{font-size:14px;font-weight:600;color:#3D2B47;line-height:1.3}
 .hdr-txt p{font-size:11px;color:rgba(61,43,71,.6);margin-top:1px}
 .hdr-badge{background:rgba(255,255,255,.8);color:#9B3A7A;font-size:11px;font-weight:600;padding:4px 13px;border-radius:20px;white-space:nowrap;box-shadow:0 1px 6px rgba(0,0,0,.08)}
+
+.btn-update{background:linear-gradient(135deg,#FFB997,#F5C9A8);color:#D47A4A;border:none;font-family:'Mitr',Tahoma,sans-serif;font-size:11px;font-weight:600;padding:5px 12px;border-radius:20px;cursor:pointer;white-space:nowrap;box-shadow:0 1px 6px rgba(0,0,0,.08);transition:all .2s;flex-shrink:0}
+.btn-update:hover{background:linear-gradient(135deg,#F5A87A,#E8B997);transform:translateY(-1px);box-shadow:0 2px 8px rgba(212,122,74,.2)}
+.btn-update:active{transform:translateY(0)}
+
+.btn-reset{background:linear-gradient(135deg,#C7CEEA,#E0E8FF);color:#5A67C4;border:none;font-family:'Mitr',Tahoma,sans-serif;font-size:11px;font-weight:600;padding:4px 11px;border-radius:20px;cursor:pointer;white-space:nowrap;transition:all .2s}
+.btn-reset:hover{background:linear-gradient(135deg,#B0B8E0,#D0D8F0);transform:translateY(-1px)}
+.btn-reset:active{transform:translateY(0)}
 
 .wrap{max-width:1440px;margin:0 auto;padding:16px 18px}
 
@@ -120,10 +128,13 @@ tbody tr:hover td{background:#FFF5FB}
 }
 @media(max-width:700px){
   .wrap{padding:10px}
-  .hdr{padding:9px 14px}
+  .hdr{padding:9px 14px;gap:9px;flex-direction:column;align-items:stretch}
+  .hdr-logo{width:40px;height:40px;font-size:20px;flex-shrink:0}
+  .hdr-txt{min-width:0}
   .hdr-txt h1{font-size:13px}
-  .hdr-badge{font-size:10px}
-  .top-bar{padding:9px 11px;gap:9px;flex-direction:column}
+  .hdr-txt p{font-size:10px}
+  .hdr-badge,.btn-update{width:100%;text-align:center;padding:5px 10px}
+  .top-bar{padding:9px 11px;gap:8px;flex-direction:column}
   .fg{width:100%}
   .fg input{width:100%}
   .total-chip{padding:7px 12px}
@@ -173,6 +184,7 @@ tbody tr:hover td{background:#FFF5FB}
     <p>กระทรวงสาธารณสุข · สำนักพัฒนาเด็กปฐมวัย (สพด.)</p>
   </div>
   <div class="hdr-badge">🎀 ปีการศึกษา 2567</div>
+  <button id="updateBtn" class="btn-update">🔃 อัพเดท</button>
 </header>
 
 <div class="wrap">
@@ -185,6 +197,7 @@ tbody tr:hover td{background:#FFF5FB}
     <div class="fg"><label>สังกัด</label><select id="ministryFilter"><option value="">ทั้งหมด</option></select></div>
     <div class="bar-sep"></div>
     <div class="fg"><label>ค้นหา</label><input type="text" id="searchInput" placeholder="🔍 รหัส สพด." style="min-width:150px"></div>
+    <button id="resetBtn" class="btn-reset">🔄 รีเซ็ต</button>
     <div class="total-chip"><div><div class="tc-l">สพด. ทั้งหมด (แห่ง)</div><div class="tc-n" id="chipTotal">—</div></div><span style="font-size:28px;opacity:.35">🏫</span></div>
   </div>
 
@@ -218,7 +231,7 @@ tbody tr:hover td{background:#FFF5FB}
     <div class="tbar"><div class="ttl">📂 รายละเอียดข้อมูลสถานพัฒนาเด็กปฐมวัย</div><div class="tcnt" id="tableCount">กำลังโหลด...</div></div>
     <div class="tscr">
       <table>
-        <thead><tr><th>รหัส สพด.</th><th>ชื่อสถานพัฒนาเด็ก</th><th>จังหวัด</th><th>เขตสุขภาพ</th><th>สังกัด</th><th>ผ่าน / ไม่ผ่าน</th><th>ผล 313ข</th></tr></thead>
+        <thead><tr><th>รหัส สพด.</th><th>ชื่อสถานพัฒนาเด็ก</th><th>จังหวัด</th><th>เขตสุขภาพ</th><th>สังกัด</th><th>ผ่าน / ไม่ผ่าน</th><th>ผล 313b</th></tr></thead>
         <tbody id="tbody"><tr><td colspan="7" class="msg"><div class="spin"></div><br>⏳ กำลังโหลดข้อมูล...</td></tr></tbody>
       </table>
     </div>
@@ -232,7 +245,7 @@ tbody tr:hover td{background:#FFF5FB}
     <div class="fc"><strong>🏢 หน่วยงาน</strong>สำนักพัฒนาเด็กปฐมวัย (สพด.)<br>กระทรวงสาธารณสุข</div>
     <div class="fc"><strong>🔄 สถานะข้อมูล</strong>โหลดจาก data-min.json<br><span id="loadTime" style="font-size:11px">—</span></div>
   </div>
-  <div class="fb">© 2567 สำนักทันตสาธารณสุข กรมอน่มัย · ระบบติดตามผลการประเมินสถานพัฒนาเด็กปฐมวัย</div>
+  <div class="fb">© 2567 สำนักพัฒนาเด็กปฐมวัย · ระบบติดตามผลการประเมินสถานพัฒนาเด็กปฐมวัย</div>
 </footer>
 
 <script>
@@ -335,6 +348,56 @@ function showDashboard(){document.getElementById('topBar').style.display='flex';
 
 ['zoneFilter','provFilter','ministryFilter'].forEach(id=>document.getElementById(id).addEventListener('change',refresh));
 document.getElementById('searchInput').addEventListener('input',refresh);
+
+// Reset button
+document.getElementById('resetBtn').addEventListener('click',()=>{
+  document.getElementById('zoneFilter').value='';
+  document.getElementById('provFilter').value='';
+  document.getElementById('ministryFilter').value='';
+  document.getElementById('searchInput').value='';
+  document.querySelectorAll('.sb').forEach(b=>b.className='sb');
+  document.querySelector('.sb[data-val=""]').classList.add('a-all');
+  activeStatus='';
+  refresh();
+});
+
+// Update button
+document.getElementById('updateBtn').addEventListener('click',async()=>{
+  const btn=document.getElementById('updateBtn');
+  const originalText=btn.textContent;
+  btn.textContent='🔄 กำลังอัพเดท...';
+  btn.disabled=true;
+  
+  try{
+    console.log('[Update] Fetching fresh data...');
+    const res=await fetch('data-min.json?t='+Date.now(),{cache:'no-store'});
+    if(!res.ok)throw new Error(`HTTP ${res.status}`);
+    const newData=await res.json();
+    if(!newData.length)throw new Error('No data');
+    
+    allData=newData;
+    console.log('[Update] ✅ Data updated:', allData.length.toLocaleString(), 'records');
+    
+    // Reset filters and refresh
+    document.getElementById('zoneFilter').value='';
+    document.getElementById('provFilter').value='';
+    document.getElementById('ministryFilter').value='';
+    document.getElementById('searchInput').value='';
+    activeStatus='';
+    document.querySelectorAll('.sb').forEach(b=>b.className='sb');
+    document.querySelector('.sb[data-val=""]').classList.add('a-all');
+    
+    populateFilters();
+    refresh();
+    
+    btn.textContent='✅ อัพเดทเสร็จ';
+    setTimeout(()=>{btn.textContent=originalText;btn.disabled=false;},2000);
+  }catch(e){
+    console.error('[Update] Error:',e.message);
+    btn.textContent='❌ อัพเดทล้มเหลว';
+    setTimeout(()=>{btn.textContent=originalText;btn.disabled=false;},3000);
+  }
+});
 document.getElementById('statusBtns').addEventListener('click',e=>{
   const b=e.target.closest('.sb');if(!b)return;
   document.querySelectorAll('.sb').forEach(x=>x.className='sb');
