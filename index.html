@@ -418,7 +418,7 @@ function showDashboard(){
 /* ── INIT: FETCH data ── */
 (async()=>{
   const startTime = performance.now();
-  const TIMEOUT = 60000; // 60 วินาที (decompress อาจช้า)
+  const TIMEOUT = 90000; // 90 วินาที
   
   // Update message
   const setLoading = (msg) => {
@@ -426,99 +426,82 @@ function showDashboard(){
     tbody.innerHTML = `<tr><td colspan="7" class="msg"><div class="spin"></div><br>${msg}</td></tr>`;
   };
   
-  // Timeout promise
-  const timeoutPromise = new Promise((_, reject) => 
-    setTimeout(() => reject(new Error('Timeout: โหลดข้อมูลไม่เสร็จใน 60 วินาที')), TIMEOUT)
-  );
-  
   try{
     let data;
     
-    // ลองดึง data.json ก่อน
-    setLoading('⏳ กำลังโหลดข้อมูล (1/2)...');
+    console.log('[Load] Starting data load...');
+    setLoading('⏳ กำลังโหลดข้อมูล...');
+    
+    // ลองดึง data.json.gz เท่านั้น (data.json ใหญ่เกิน)
     try {
-      console.log('[Load] Trying data.json...');
-      const res = await Promise.race([
-        fetch('data.json?t=' + Date.now(), {cache: 'no-store'}),
-        timeoutPromise
-      ]);
-      if(res.ok) {
-        console.log('[Load] Parsing JSON...');
-        data = await res.json();
-        console.log('[Load] JSON parsed:', data.length, 'records');
-      }
-    } catch(e1) {
-      console.log('[Load] data.json failed:', e1.message);
+      console.log('[Load] Fetching data.json.gz...');
+      setLoading('⏳ กำลังดาวน์โหลด data.json.gz (1.3 MB)...');
       
-      // ถ้า data.json ไม่ได้ ลอง data.json.gz
-      setLoading('⏳ กำลังโหลดข้อมูล (2/2 - การบีบอัด)...');
-      try {
-        console.log('[Load] Trying data.json.gz...');
-        const res = await Promise.race([
-          fetch('data.json.gz?t=' + Date.now(), {cache: 'no-store'}),
-          timeoutPromise
-        ]);
-        if(!res.ok) throw new Error(`HTTP ${res.status}`);
-        
-        console.log('[Load] Fetched .gz, decompressing...');
-        const buffer = await res.arrayBuffer();
-        const uint8 = new Uint8Array(buffer);
-        
-        // ตรวจสอบ pako
-        if(typeof pako === 'undefined') {
-          throw new Error('ไม่สามารถโหลด pako library');
-        }
-        
-        console.log('[Load] pako ready, decompressing', (uint8.length/1024/1024).toFixed(2), 'MB...');
-        setLoading('⏳ กำลังแตกไฟล์ที่บีบอัด (อาจใช้เวลา 10-20 วินาที)...');
-        const startDecompress = performance.now();
-        
-        // Decompress อาจ async
-        let decompressed;
-        if (pako.ungzip.constructor.name === 'AsyncFunction') {
-          decompressed = await pako.ungzip(uint8, {to:'string'});
-        } else {
-          decompressed = pako.ungzip(uint8, {to:'string'});
-          // ถ้า return Promise
-          if (decompressed instanceof Promise) {
-            decompressed = await decompressed;
-          }
-        }
-        
-        const decompressTime = (performance.now() - startDecompress).toFixed(0);
-        console.log('[Load] Decompressed in', decompressTime, 'ms');
-        
-        console.log('[Load] Parsing JSON from decompressed...');
-        data = JSON.parse(decompressed);
-        console.log('[Load] JSON parsed:', data.length, 'records');
-      } catch(e2) {
-        console.error('[Load] data.json.gz failed:', e2.message);
-        throw new Error(`ไม่พบ data.json หรือ data.json.gz: ${e2.message}`);
+      const res = await fetch('data.json.gz?t=' + Date.now(), {cache: 'no-store'});
+      if(!res.ok) {
+        console.error('[Load] HTTP', res.status);
+        throw new Error(`HTTP ${res.status}`);
       }
+      
+      console.log('[Load] Fetched, converting to array...');
+      const buffer = await res.arrayBuffer();
+      const uint8 = new Uint8Array(buffer);
+      console.log('[Load] Array created:', uint8.length, 'bytes');
+      
+      // ตรวจสอบ pako
+      if(typeof pako === 'undefined' || !pako.ungzip) {
+        throw new Error('pako.ungzip not available');
+      }
+      
+      console.log('[Load] Calling pako.ungzip...');
+      setLoading('⏳ กำลังแตกไฟล์บีบอัด (อาจใช้เวลา 10-30 วินาที)...');
+      
+      const startDecompress = performance.now();
+      const decompressed = await pako.ungzip(uint8, {to:'string'});
+      const decompressTime = (performance.now() - startDecompress).toFixed(0);
+      console.log('[Load] Decompressed in', decompressTime, 'ms -', (decompressed.length/1024/1024).toFixed(2), 'MB');
+      
+      console.log('[Load] Parsing JSON...');
+      setLoading('⏳ กำลังประมวลผลข้อมูล...');
+      data = JSON.parse(decompressed);
+      console.log('[Load] JSON parsed:', data.length, 'records');
+      
+    } catch(e) {
+      console.error('[Load] Error:', e.message);
+      throw new Error(`ไม่สามารถโหลด data.json.gz: ${e.message}`);
+    }
+    
+    if(!data || !Array.isArray(data) || data.length === 0) {
+      throw new Error('ข้อมูลไม่ถูกต้อง - ไม่พบแถวข้อมูล');
     }
     
     allData = data;
-    if(!allData.length) throw new Error('ไม่พบข้อมูลในไฟล์');
     
     const totalTime = (performance.now() - startTime).toFixed(0);
-    console.log('[Load] ✅ Complete in', totalTime, 'ms');
+    console.log('[Load] ✅ Complete in', totalTime, 'ms -', allData.length.toLocaleString(), 'records');
+    setLoading('⏳ กำลังแสดง Dashboard...');
     
-    showDashboard();
+    // รอสักครู่แล้วแสดง dashboard
+    setTimeout(showDashboard, 500);
+    
   }catch(e){
-    console.error('[Load] Error:', e);
+    console.error('[Load] Fatal Error:', e.message);
+    const msg = e.message;
     document.getElementById('tbody').innerHTML=
       `<tr><td colspan="7" class="msg" style="color:#c0392b">
-        ❌ โหลดข้อมูลไม่สำเร็จ<br>
-        <small><strong>${e.message}</strong></small><br>
-        <small style="display:block;margin-top:10px">📌 ให้ลองสิ่งเหล่านี้:<br>
-        ✓ Refresh หน้า (Ctrl+F5)<br>
-        ✓ ตรวจสอบว่า <strong>data.json.gz</strong> อยู่ใน repo root<br>
-        ✓ เปิด Browser console (F12) เพื่อดู error รายละเอียด<br>
-        ✓ ลองใช้ Chrome หรือ Firefox แทน Edge<br>
-        ✓ ดูว่า pako-inline.js โหลดได้ไหม
+        ❌ ${msg}<br>
+        <small style="display:block;margin-top:10px;line-height:1.8">
+          <strong>🔍 ตรวจสอบ:</strong><br>
+          ✓ ปิด F12 console แล้ว Refresh (Ctrl+F5)<br>
+          ✓ ดาวน์โหลด index.html + pako-inline.js + data.json.gz ใหม่<br>
+          ✓ อัปโหลดไป GitHub อีกครั้ง<br>
+          ✓ รอ 2-3 นาทีให้ GitHub Pages update cache<br>
+          ✓ เปิด DevTools (F12) → Network เพื่อดูว่า .gz โหลดได้ไหม
         </small>
       </td></tr>`;
     document.getElementById('tableCount').textContent='โหลดไม่สำเร็จ';
+    document.getElementById('topBar').style.display='none';
+    document.getElementById('cgrid').style.display='none';
   }
 })();
 
